@@ -7,11 +7,15 @@ import {
   GameState,
   Hand,
   GameResult,
+  CardValue,
 } from "./types";
 
 //UI Elements
 const CardBackImage = () => (
-  <img src={process.env.PUBLIC_URL + `/SVG-cards/png/1x/back.png`} />
+  <img
+    src={process.env.PUBLIC_URL + `/SVG-cards/png/1x/back.png`}
+    alt="Card - Back"
+  />
 );
 
 const CardImage = ({ suit, rank }: Card) => {
@@ -22,6 +26,7 @@ const CardImage = ({ suit, rank }: Card) => {
         process.env.PUBLIC_URL +
         `/SVG-cards/png/1x/${suit.slice(0, -1)}_${card}.png`
       }
+      alt={`Card - ${suit.slice(0, -1)}_${card}`}
     />
   );
 };
@@ -57,17 +62,67 @@ const setupGame = (): GameState => {
   };
 };
 
+const sumReducer = (accumulator: number, current: Card): number => {
+  return accumulator + CardValue[current.rank];
+};
+
 //Scoring
 const calculateHandScore = (hand: Hand): number => {
-  return 0;
+  const aces = hand.filter((card) => card.rank === CardRank.Ace);
+  const rest = hand.filter((card) => card.rank !== CardRank.Ace);
+
+  let score = rest.reduce(sumReducer, 0);
+
+  if (aces.length) {
+    const reminder = 21 - score;
+
+    // There can be only one ace with value 11 before busting the score
+    // Check if score is busted by accumulating aces with a single 11 value
+    if (11 + (aces.length - 1) <= reminder) {
+      score += 11 + (aces.length - 1);
+    } else {
+      // If score was busted treat all aces as 1
+      score += aces.length;
+    }
+  }
+
+  return score;
 };
 
 const determineGameResult = (state: GameState): GameResult => {
+  const { dealerHand, playerHand } = state;
+  const playerScore = calculateHandScore(playerHand);
+  const dealerScore = calculateHandScore(dealerHand);
+
+  if (playerScore > 21 || (dealerScore <= 21 && dealerScore > playerScore)) {
+    return "dealer_win";
+  }
+
+  if (dealerScore > 21 || playerScore > dealerScore) {
+    return "player_win";
+  }
+
+  if (dealerScore === playerScore) {
+    return "draw";
+  }
+
   return "no_result";
 };
 
 //Player Actions
 const playerStands = (state: GameState): GameState => {
+  const score = calculateHandScore(state.dealerHand);
+
+  if (score <= 16) {
+    const { card, remaining } = takeCard(state.cardDeck);
+    return {
+      ...state,
+      cardDeck: remaining,
+      dealerHand: [...state.dealerHand, card],
+      turn: "dealer_turn",
+    };
+  }
+
   return {
     ...state,
     turn: "dealer_turn",
@@ -123,7 +178,7 @@ const Game = (): JSX.Element => {
         </div>
       )}
       {state.turn === "dealer_turn" &&
-      determineGameResult(state) != "no_result" ? (
+      determineGameResult(state) !== "no_result" ? (
         <p>{determineGameResult(state)}</p>
       ) : (
         <p>{state.turn}</p>

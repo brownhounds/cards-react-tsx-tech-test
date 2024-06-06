@@ -177,12 +177,12 @@ describe("Determining the winner", () => {
     const notBlackJack: Hand = [
       { suit: CardSuit.Clubs, rank: CardRank.Ace },
       { suit: CardSuit.Clubs, rank: CardRank.Five },
-      { suit: CardSuit.Clubs, rank: CardRank.Five },
+      { suit: CardSuit.Clubs, rank: CardRank.Four },
     ];
     game.playerHand = blackJack;
     game.dealerHand = notBlackJack;
     expect(calculateHandScore(blackJack)).toBe(21);
-    expect(calculateHandScore(notBlackJack)).toBe(21);
+    expect(calculateHandScore(notBlackJack)).toBe(20);
     expect(determineGameResult(game)).toBe("player_win");
 
     game.playerHand = blackJack;

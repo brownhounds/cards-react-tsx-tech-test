@@ -21,6 +21,24 @@ export enum CardRank {
   King = "king",
 }
 
+export const CardValue = {
+  [CardRank.Ace]: 0,
+  [CardRank.Two]: 2,
+  [CardRank.Three]: 3,
+  [CardRank.Four]: 4,
+  [CardRank.Five]: 5,
+  [CardRank.Six]: 6,
+  [CardRank.Seven]: 7,
+  [CardRank.Eight]: 8,
+  [CardRank.Nine]: 9,
+  [CardRank.Ten]: 10,
+  [CardRank.Jack]: 10,
+  [CardRank.Queen]: 10,
+  [CardRank.King]: 10,
+} as const;
+
+export type CardValues = (typeof CardValue)[keyof typeof CardValue];
+
 export type GameResult = "no_result" | "player_win" | "dealer_win" | "draw";
 
 export type Turn = "player_turn" | "dealer_turn";
